@@ -49,10 +49,16 @@ export const runPromptFile = async (
 
 	let wasAlreadyAttached = true;
 	if (isSetInImplicitContext(file, widget) === false) {
-		wasAlreadyAttached = widget
-			.attachmentModel
-			.promptInstructions
-			.add(file);
+		const { attachmentModel, input } = widget;
+		const { promptInstructions } = attachmentModel;
+
+		wasAlreadyAttached = promptInstructions.add(file);
+
+		const { toolsMetadata } = (await promptInstructions.allSettled());
+		if ((toolsMetadata !== null) && (toolsMetadata.length > 0)) {
+			input.selectedToolsModel
+				.selectOnly(toolsMetadata);
+		}
 	}
 
 	// submit the prompt immediately
