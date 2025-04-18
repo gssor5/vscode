@@ -147,8 +147,12 @@ export class BasePromptParser<TContentsProvider extends IPromptContentsProvider>
 		await this.stream.settled;
 
 		// if prompt header exists, also wait for it to be settled
-		if (this.promptHeader) {
-			await this.promptHeader.settled;
+		if (this.header !== undefined) {
+			try {
+				await this.header.settled;
+			} catch (error) {
+				throw error;
+			}
 		}
 
 		return this;

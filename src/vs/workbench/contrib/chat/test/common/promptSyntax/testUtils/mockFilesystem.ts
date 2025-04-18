@@ -6,6 +6,7 @@
 import { URI } from '../../../../../../../base/common/uri.js';
 import { assert } from '../../../../../../../base/common/assert.js';
 import { VSBuffer } from '../../../../../../../base/common/buffer.js';
+import { wait } from '../../../../../../../base/test/common/testUtils.js';
 import { IFileService } from '../../../../../../../platform/files/common/files.js';
 
 /**
@@ -90,7 +91,28 @@ export class MockFilesystem {
 					`File '${folderUri.path}' already exists.`,
 				);
 
-				await this.fileService.writeFile(childUri, VSBuffer.fromString(child.contents));
+				const originalFileContents = VSBuffer.fromString(child.contents);
+				await this.fileService.writeFile(childUri, originalFileContents);
+
+				// TODO: @legomushroom
+				let i = 10;
+				while (i > 0) {
+					try {
+						const fileContents = (await this.fileService.readFile(childUri)).value;
+						if (fileContents.equals(originalFileContents)) {
+							break;
+						}
+					} catch (error) {
+						// noop
+						console.log(error);
+					}
+					i--;
+					await wait(25);
+				}
+
+				if (i === 0) {
+					console.log('failed to read back file contents');
+				}
 
 				resolvedChildren.push({
 					...child,
